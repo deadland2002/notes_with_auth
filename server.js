@@ -155,7 +155,11 @@ app.post("/account", async function (req, res) {
         console.log("Invalid Token");
         return res.json({ status: 'error', error: "Token invalid" });
     }
+    
+    
     const arr = []
+
+
     try {
         const response = await User.findOne({ username }).lean();
         const list = response.list;
