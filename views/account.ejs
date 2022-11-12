@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Ejs</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <%- include ('navbar'); %>
+
+        <div class="wrapper" id="body" style="display: none;">
+            <div class="right-box">
+                <button onclick="signout()" class="signout">Sign Out</button>
+                <button onclick="deleteaccount()" class="signout">Delete Account</button>
+            </div>
+            <div class="">
+                <div>
+                    <form action="/account" method="post" id="form" class="reg-form">
+                        <div>
+                            <h1>HI THERE</h1>
+                            <h2 id="name-user"></h2>
+                        </div>
+                        <div>
+                            <label for="title-str">Title</label>
+                            <input type="text" name="TitleStr" id="title-str" required>
+                        </div>
+                        <div>
+                            <label for="input-str">Content</label>
+                            <input type="text" name="InputStr" id="input-str" required>
+                        </div>
+                        <button type="submit">Submit</button>
+                    </form>
+                </div>
+
+            </div>
+
+            <ul id="list-view">
+            </ul>
+
+        </div>
+
+        <%- include ('footer'); %>
+
+            <script>
+                
+                const username = localStorage.getItem("User");
+                var arr = [];
+
+                function signout() {
+                    alert("You are Signed Out");
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('User');
+                    location.href = "/";
+                }
+
+
+
+                async function deleteaccount() {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('User');
+
+                    const result = await fetch('/account/deleteaccount', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({username})
+                    })
+                        .then(response => response.json())
+
+                    
+                    alert("Account Deleted");
+                    location.href = "/";
+                }
+
+
+
+                async function deleteitem(title, inp) {
+
+
+                    for (var i = 0; i < arr.length; i++) {
+                        if (arr[i][0] === title) {
+                            break;
+                        }
+                    }
+
+
+                    const result = await fetch('/account/delete', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, title, inp })
+                    })
+                        .then(response => response.json())
+
+
+
+                    location.href = "/account";
+                }
+
+                window.addEventListener("load", async function () {
+                    const user_h2 = document.getElementById('name-user');
+                    const token = localStorage.getItem("token");
+                    const username = localStorage.getItem("User");
+                    const body = document.getElementById('body');
+                    const form = document.getElementById('form');
+                    const list_view = document.getElementById('list-view');
+
+                    if (token && username) {
+                        user_h2.innerText = username;
+                    }
+                    else {
+                        alert("login again");
+                        location.href = "/login";
+                    }
+
+
+                    form.addEventListener('submit', async function () {
+                        event.preventDefault();
+                        const inp_str = document.getElementById("input-str").value;
+                        const title_str = document.getElementById("title-str").value;
+
+                        if (inp_str.length < 1)
+                            return alert('Empty Field');
+
+                        body.style.pointerEvents = "none";
+
+
+                        const result = await fetch('/account/add', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ username, title_str, inp_str })
+                        })
+                            .then(response => response.json())
+
+
+                        body.style.pointerEvents = "all";
+                        arr.push([title_str, inp_str])
+                        list_view.innerHTML += `<li><div class="card"> <h3> ${title_str} </h3> <button class="deleteitem" onclick="deleteitem('${title_str}','${inp_str}')" >X</button> </div><p> ${inp_str} </p> </li>`;
+                        document.getElementById("input-str").value = '';
+                        document.getElementById("title-str").value = '';
+
+                    })
+
+
+                    const result = await fetch('/account', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username,
+                            token
+                        })
+                    }).then(res => res.json()).then(data => { obj = data; });
+
+                    if (obj.status !== "ok") {
+                        alert("login again");
+                        location.href = "/login";
+                    }
+                    else {
+                        arr = [];
+                        body.style.display = 'block';
+                        const vals = obj.list;
+
+                        vals.forEach(element => {
+                            arr.push(element);
+                        })
+
+                        arr.forEach(element => {
+                            list_view.innerHTML += `<li><div class="card"> <h3> ${element[0]} </h3> <button class="deleteitem" onclick="deleteitem('${element[0]}','${element[1]}')" >X</button> </div><p> ${element[1]} </p> </li>`;
+                        });
+                    }
+
+                });
+            </script>
+
+</body>
+
+</html>

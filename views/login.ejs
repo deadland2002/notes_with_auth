@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <%- include ('navbar'); %>
+
+    <div class="form-wrapper wrapper">
+        <form class="reg-form" id="reg-form">
+            <h2>Login</h2>
+
+            <div class="username-div">
+                <label for="username">Username</label>
+                <input type="text" id="username" autofocus>
+            </div>
+
+            <div class="password-div">
+                <label for="password">Password</label>
+                <input type="password" id="password">
+            </div>
+
+            <button type="submit" id="submit-btn">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        window.addEventListener('load', function () {
+            const form = document.getElementById('reg-form');
+            var UN = localStorage.getItem("User");
+            
+            if(UN)
+                document.getElementById('username').value = UN;
+
+
+            form.addEventListener('submit', sendform);
+
+            async function sendform() {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const submit_btn = document.getElementById('submit-btn');
+                const loading = document.getElementById('loading');
+
+                event.preventDefault();
+
+
+                var obj;
+
+
+
+                if (!username) {
+                    alert("Enter Username");
+                    return;
+                }
+                else if (!password) {
+                    alert("Enter Password");
+                    return;
+                }
+                else if (password.length < 5) {
+                    alert("Password too small");
+                    return;
+                }
+
+
+
+                submit_btn.innerText = "Loading";
+                submit_btn.style.backgroundColor = "rgb(187, 255, 0)";
+                form.style.pointerEvents = "none";
+
+                const result = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username,
+                        password
+                    })
+                }).then(res => res.json()).then(data => { obj = data; });
+
+                if (obj.status === 'ok') {
+                    submit_btn.innerText = "Verified";
+                    submit_btn.style.backgroundColor = "rgb(0, 255, 34)";
+                    localStorage.setItem("token", obj.data);
+                    localStorage.setItem("User", username);
+                    setTimeout(function (){location.href="/account"},1000);
+                }
+                else {
+                    submit_btn.style.backgroundColor = "rgb(255, 0, 0)";
+                    submit_btn.innerText = "Retry";
+                    alert(obj.error);
+                }
+
+                form.style.pointerEvents = "all";
+
+            }
+        })
+    </script>
+</body>
+
+</html>

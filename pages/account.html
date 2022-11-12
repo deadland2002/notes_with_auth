@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account</title>
+    <style>
+    </style>
+</head>
+
+<body>
+    <div class="wrapper" id="body" style="display: none;">
+        <h1>HI THERE</h1>
+        <h2 id="name-user"></h2>
+
+        <form action="/account" method="post" id="form">
+            <input type="text" name="InputStr" id="input-str">
+            <button type="submit">Submit</button>
+        </form>
+
+        <ul id="list-view">
+        </ul>
+    </div>
+    <script>
+
+        window.addEventListener("load", async function () {
+            const user_h2 = document.getElementById('name-user');
+            const token = localStorage.getItem("token");
+            const username = localStorage.getItem("User");
+            const body = document.getElementById('body');
+            const form = document.getElementById('form');
+            const list_view = document.getElementById('list-view');
+            var arr = [];
+
+            if (token && username) {
+                user_h2.innerText = username;
+            }
+            else {
+                alert("login again");
+                location.href = "/login";
+            }
+
+
+            form.addEventListener('submit', async function () {
+                event.preventDefault();
+                const inp_str = document.getElementById("input-str").value;
+
+
+                body.style.pointerEvents = "none";
+
+
+                const result = await fetch('/account/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, inp_str })
+                })
+                    .then(response => response.json())
+                    .then(response => console.log(JSON.stringify(response)))
+
+
+                body.style.pointerEvents = "all";
+
+                arr.push(inp_str)
+                list_view.innerHTML += `<li> ${inp_str}</li>`;
+                console.log("Submit", inp_str);
+            })
+
+
+            const result = await fetch('/account', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username,
+                    token
+                })
+            }).then(res => res.json()).then(data => { obj = data; });
+
+            if (obj.status !== "ok") {
+                alert("login again");
+                location.href = "/login";
+            }
+            else {
+                arr = [];
+                body.style.display = 'block';
+                const vals = obj.list;
+
+                vals.forEach(element => {
+                    arr.push(element);
+                })
+
+                arr.forEach(element => {
+                    list_view.innerHTML += `<li> ${element}</li>`;
+                });
+            }
+
+        });
+    </script>
+
+</body>
+
+</html>
